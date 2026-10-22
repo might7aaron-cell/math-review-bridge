@@ -4,7 +4,7 @@ const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const ids=['vendor/jszip.min.js','src/archive.cjs','src/core.cjs','src/writer.cjs','src/main.cjs'];
 const modules=ids.map(id=>JSON.stringify(id)+': function(module,exports,require){\n'+fs.readFileSync(path.join(root,id),'utf8')+'\n}').join(',\n');
-const output=`/* 数学学习桥 0.1.0 — MIT. JSZip 3.10.1 — MIT. See THIRD_PARTY_LICENSES.md. */
+const output=`/* 数学学习桥 0.1.1 — MIT. JSZip 3.10.1 — MIT. See THIRD_PARTY_LICENSES.md. */
 'use strict';
 const __modules={${modules}};
 const __cache={};
@@ -26,3 +26,4 @@ module.exports=__load('src/main.cjs');
 `;
 fs.writeFileSync(path.join(root,'main.js'),output);
 console.log('Built main.js: '+Buffer.byteLength(output)+' bytes');
+

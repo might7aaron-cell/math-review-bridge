@@ -51,7 +51,7 @@ class ImportModal extends Modal {
     this.previewEl.createEl('p',{text:`本次识别 ${bundle.documents.length} 份资料，涉及 ${imported.touched} 个条目和 ${imported.assets.size} 张手写图片。`});
     const p=preview.counts;
     this.previewEl.createEl('p',{text:`预计新增 ${p.create} 个文件，更新 ${p.update} 个，保持 ${p.skip} 个；需保留两版 ${p.conflict} 个。`});
-    this.previewEl.createEl('p',{text:'原始 JSON 一并保留。已自行修改的导入区会另存更新版本；「我的笔记」始终保留。',cls:'msb-muted'});
+    this.previewEl.createEl('p',{text:'笔记和画布使用主题名称。已自行修改的导入区会另存更新版本；「我的笔记」始终保留。',cls:'msb-muted'});
     if(imported.warnings.length) {
       const box=this.previewEl.createEl('details'); box.createEl('summary',{text:`查看 ${imported.warnings.length} 条导入说明`});
       const ul=box.createEl('ul'); for(const warning of imported.warnings) ul.createEl('li',{text:warning});
@@ -64,7 +64,7 @@ class ImportModal extends Modal {
     let imported;
     try {
       imported=ingest(this.plugin.state,this.bundle);
-      const result=await writer.write(this.app.vault,imported,(n,total)=>this.status.textContent=`正在生成 ${n}/${total}…`);
+      const result=await writer.write(this.app.vault,imported,(n,total)=>this.status.textContent=`正在生成 ${n}/${total}…`,(file,path)=>this.app.fileManager.renameFile(file,path));
       this.plugin.state=imported.state; await this.plugin.saveData(this.plugin.state);
       const r=result.counts;
       this.status.textContent=`完成：新增 ${r.create}，更新 ${r.update}，保留 ${r.skip}。${r.conflict ? ` ${r.conflict} 个更新版本已放入 _冲突；原笔记保留。` : ''}`;
@@ -96,6 +96,7 @@ class BridgeSettings extends PluginSettingTab {
         catch(e) { new Notice(e.message); }
       }));
     new Setting(c).setName('导入资料').addButton(b=>b.setButtonText('选择 JSON / ZIP').onClick(()=>new ImportModal(this.plugin).open()));
+    new Setting(c).setName('整理已有笔记显示').setDesc('将旧文件名改为主题名称，移除正文中的内部编号与原始 JSON 入口。').addButton(b=>b.setButtonText('整理显示').onClick(()=>this.plugin.refreshDisplay()));
   }
 }
 class MathStudyBridge extends Plugin {
@@ -107,7 +108,24 @@ class MathStudyBridge extends Plugin {
     this.addRibbonIcon('book-open-check','数学学习桥：导入复习资料',open);
     this.addCommand({id:'import-material',name:'导入复习资料',callback:open});
     this.addCommand({id:'open-home',name:'打开学习首页',callback:()=>this.openHome()});
+    this.addCommand({id:'refresh-display',name:'整理已有笔记显示',callback:()=>this.refreshDisplay()});
     this.addSettingTab(new BridgeSettings(this.app,this));
+  }
+  async refreshDisplay() {
+    if(this.busy) return;
+    this.busy=true;
+    let imported;
+    try {
+      imported=ingest(this.state,{documents:[],warnings:[]});
+      const result=await writer.write(this.app.vault,imported,()=>{},(file,path)=>this.app.fileManager.renameFile(file,path));
+      this.state=imported.state; await this.saveData(this.state);
+      new Notice(`显示已整理：${result.counts.renamed} 个笔记改用主题名称。${result.counts.conflict?'手动修改已保留，更新副本在 _冲突 中。':''}`,10000);
+      await this.openHome();
+    } catch(e) {
+      if(imported) this.state=imported.state;
+      try { await this.saveData(this.state); } catch { new Notice('插件索引保存失败，请保留 data.json。',10000); }
+      new Notice('整理未全部完成，可重试：'+(e.message||e),10000);
+    } finally { this.busy=false; }
   }
   async openHome() {
     const path=this.state.root+'/首页.md';
@@ -116,3 +134,4 @@ class MathStudyBridge extends Plugin {
   }
 }
 module.exports=MathStudyBridge;
+
