@@ -1,0 +1,15 @@
+{
+  "format": "math-review",
+  "schemaVersion": 2,
+  "id": "synthetic-demo",
+  "title": "学习桥演示（虚构示例）",
+  "chapters": [
+    {"id":"demo-algebra-1","subjectId":"algebra","title":"行列式示例"},
+    {"id":"demo-analysis-1","subjectId":"analysis","title":"数列极限示例"}
+  ],
+  "nodes": [
+    {"id":"demo-group","chapterId":"demo-algebra-1","kind":"group","title":"定义与性质","sections":[]},
+    {"id":"demo-det","chapterId":"demo-algebra-1","parentId":"demo-group","kind":"knowledge","title":"二阶行列式","sections":[{"title":"定义","body":"$$\\begin{vmatrix}a&b\\\\c&d\\end{vmatrix}=ad-bc.$$"}],"related":["demo-limit"],"selfCheck":{"prompt":"单位矩阵的行列式是多少？","answer":"等于 1。"}},
+    {"id":"demo-limit","chapterId":"demo-analysis-1","kind":"knowledge","title":"一个数列极限","summary":"演示第二个学科入口。","sections":[{"title":"极限","body":"$$\\lim_{n\\to\\infty}\\frac{1}{n}=0.$$"}],"related":["demo-det"]}
+  ]
+}

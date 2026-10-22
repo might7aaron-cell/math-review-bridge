@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+data.json
+input/
+test-vault/
+private-fixtures/

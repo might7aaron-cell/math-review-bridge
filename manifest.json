@@ -1,0 +1,9 @@
+{
+  "id": "math-study-bridge",
+  "name": "数学学习桥",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "将数学复习台与工作台的 JSON / ZIP 整理为章节笔记、关联链接和 Canvas。",
+  "author": "Aaron Riddel",
+  "isDesktopOnly": false
+}
