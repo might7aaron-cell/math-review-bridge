@@ -36,7 +36,7 @@ function block(title, value) { return value === undefined || value === null || v
 function detail(value, level = 0) {
   if (value == null) return '';
   if (typeof value !== 'object') return md(value);
-  if (level > 8) return JSON.stringify(value);
+  if (level > 8) return '（内容层级过深，已折叠省略）';
   if (Array.isArray(value)) return value.map(v => '- ' + detail(v, level + 1).replace(/\n/g, '\n  ')).join('\n');
   const labels = { recognition:'结构辨认', selection:'工具选择', reasoning:'关键推理', transfer:'迁移', before:'原思路', after:'修正动作', evidence:'证据', bottleneck:'卡点', nextCheck:'下一次检验', thinkingChange:'思路变化', stages:'原有诊断', questionId:'题号', methodId:'方法编号', trigger:'触发线索', invariant:'结构', action:'关键动作', boundary:'成立条件', counterexample:'边界与反例', outline:'作答', result:'原记录结果', blockers:'卡点', minutes:'分钟', hintSeen:'是否看过提示', mode:'作答方式', createdAt:'记录时间', date:'日期', goal:'检验目标', reason:'安排依据', basis:'安排依据', budgetMinutes:'时间上限（分钟）' };
   return Object.entries(value).map(([k,v]) => `- **${label(labels[k] || k)}**：${detail(v,level+1).replace(/\n/g,'\n  ')}`).join('\n');
@@ -56,6 +56,25 @@ function requireId(value, where) {
 function wiki(path, title) { return `[[${path.replace(/\.md$/,'')}|${label(title)}]]`; }
 function chapterKey(origin, sub, id) { return key('chapter',origin,sub,id); }
 function recordKey(origin, sub, ch, id) { return key('record',origin,sub,ch,id); }
+function noteName(title) {
+  const superscript={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','n':'ⁿ','+':'⁺','-':'⁻'};
+  return safe(text(title).replace(/\\[()[\]]|\$/g,'').replace(/\\det\b/g,'det')
+    .replace(/\^(?:\{([0-9n+-]+)\}|([0-9n+-]))/g,(_,group,single)=>[...(group||single)].map(c=>superscript[c]).join('')));
+}
+
+function readablePaths(state) {
+  const records=Object.values(state.records);
+  const legacy=r=>`${state.chapters[r.chapterKey].folder}/条目/${safe(r.id)}--${hash(r.key).slice(0,10)}.md`;
+  const pending=records.filter(r=>!r.path || r.path===legacy(r));
+  const used=new Set(records.filter(r=>!pending.includes(r)).map(r=>r.path.toLowerCase()));
+  for(const r of pending) {
+    const base=`${state.chapters[r.chapterKey].folder}/条目/${noteName(r.title)}`;
+    let path=base+'.md', index=2;
+    while(used.has(path.toLowerCase())) path=`${base}（${index++}）.md`;
+    if(r.path && r.path!==path) r.previousPath=r.path;
+    r.path=path; used.add(path.toLowerCase());
+  }
+}
 
 function ingest(state, bundle) {
   const next = clone(state || initialState());
@@ -75,7 +94,6 @@ function ingest(state, bundle) {
     requireId(id,'条目');
     const k = recordKey(ch.origin,ch.subject,ch.id,id), old = next.records[k];
     const rec = next.records[k] = { ...old, key:k, id, chapterKey:ch.key, subject:ch.subject, title:title || old?.title || id, type:type || old?.type || '条目', parts:{...old?.parts}, originals:[...new Set([...(old?.originals || []),source])], ...extra };
-    rec.path = old?.path || `${ch.folder}/条目/${safe(id)}--${hash(k).slice(0,10)}.md`;
     rec.parts[part] = body;
     touched.add(k); return rec;
   }
@@ -186,6 +204,7 @@ function ingest(state, bundle) {
     }
   }
   if (Object.keys(next.records).length > 10000) throw new Error('条目过多；建议按学科拆分笔记库。');
+  readablePaths(next);
   return {state:next,warnings:[...new Set(warnings)],assets,originals,touched:touched.size};
 }
 
@@ -228,14 +247,13 @@ function generate(imported) {
   for(const [path,content] of imported.originals) add(path,'raw:'+path,content,false,true);
   for(const r of list) {
     const ch=s.chapters[r.chapterKey];
-    let body=`# ${label(r.title)}\n\n${wiki(ch.path,ch.title)} · ${label(r.type)} · 原 ID：${label(r.id)}\n`;
+    let body=`# ${label(r.title)}\n\n${wiki(ch.path,ch.title)} · ${label(r.type)}\n`;
     if(r.parentKey && s.records[r.parentKey]) body+='\n上级：'+link(s.records[r.parentKey])+'\n';
     body+=Object.values(r.parts).join('\n');
     const children=list.filter(x=>x.parentKey===r.key);
     if(children.length) body+=block('下级条目',children.map(x=>'- '+link(x)).join('\n'));
     const relations=[...new Set(r.relatedKeys || [])].map(k=>s.records[k]).filter(Boolean);
     if(relations.length) body+=block('关联内容',relations.map(x=>'- '+link(x)).join('\n'));
-    body+=block('导入原文',r.originals.map(p=>'- '+wiki(p,'原始 JSON')).join('\n'));
     add(r.path,r.key,body);
   }
   const originLabel=o=>o==='review'?'章节复习':'做题反馈';
@@ -281,3 +299,4 @@ function generate(imported) {
   return files;
 }
 module.exports={SUBJECTS,DEFAULT_ROOT,initialState,ingest,generate,reconcile,hash,rootPath,managed,extractManaged,md};
+

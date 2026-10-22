@@ -1,4 +1,4 @@
-/* 数学学习桥 0.1.0 — MIT. JSZip 3.10.1 — MIT. See THIRD_PARTY_LICENSES.md. */
+/* 数学学习桥 0.1.1 — MIT. JSZip 3.10.1 — MIT. See THIRD_PARTY_LICENSES.md. */
 'use strict';
 const __modules={"vendor/jszip.min.js": function(module,exports,require){
 /*!
@@ -151,7 +151,7 @@ function block(title, value) { return value === undefined || value === null || v
 function detail(value, level = 0) {
   if (value == null) return '';
   if (typeof value !== 'object') return md(value);
-  if (level > 8) return JSON.stringify(value);
+  if (level > 8) return '（内容层级过深，已折叠省略）';
   if (Array.isArray(value)) return value.map(v => '- ' + detail(v, level + 1).replace(/\n/g, '\n  ')).join('\n');
   const labels = { recognition:'结构辨认', selection:'工具选择', reasoning:'关键推理', transfer:'迁移', before:'原思路', after:'修正动作', evidence:'证据', bottleneck:'卡点', nextCheck:'下一次检验', thinkingChange:'思路变化', stages:'原有诊断', questionId:'题号', methodId:'方法编号', trigger:'触发线索', invariant:'结构', action:'关键动作', boundary:'成立条件', counterexample:'边界与反例', outline:'作答', result:'原记录结果', blockers:'卡点', minutes:'分钟', hintSeen:'是否看过提示', mode:'作答方式', createdAt:'记录时间', date:'日期', goal:'检验目标', reason:'安排依据', basis:'安排依据', budgetMinutes:'时间上限（分钟）' };
   return Object.entries(value).map(([k,v]) => `- **${label(labels[k] || k)}**：${detail(v,level+1).replace(/\n/g,'\n  ')}`).join('\n');
@@ -171,6 +171,25 @@ function requireId(value, where) {
 function wiki(path, title) { return `[[${path.replace(/\.md$/,'')}|${label(title)}]]`; }
 function chapterKey(origin, sub, id) { return key('chapter',origin,sub,id); }
 function recordKey(origin, sub, ch, id) { return key('record',origin,sub,ch,id); }
+function noteName(title) {
+  const superscript={'0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹','n':'ⁿ','+':'⁺','-':'⁻'};
+  return safe(text(title).replace(/\\[()[\]]|\$/g,'').replace(/\\det\b/g,'det')
+    .replace(/\^(?:\{([0-9n+-]+)\}|([0-9n+-]))/g,(_,group,single)=>[...(group||single)].map(c=>superscript[c]).join('')));
+}
+
+function readablePaths(state) {
+  const records=Object.values(state.records);
+  const legacy=r=>`${state.chapters[r.chapterKey].folder}/条目/${safe(r.id)}--${hash(r.key).slice(0,10)}.md`;
+  const pending=records.filter(r=>!r.path || r.path===legacy(r));
+  const used=new Set(records.filter(r=>!pending.includes(r)).map(r=>r.path.toLowerCase()));
+  for(const r of pending) {
+    const base=`${state.chapters[r.chapterKey].folder}/条目/${noteName(r.title)}`;
+    let path=base+'.md', index=2;
+    while(used.has(path.toLowerCase())) path=`${base}（${index++}）.md`;
+    if(r.path && r.path!==path) r.previousPath=r.path;
+    r.path=path; used.add(path.toLowerCase());
+  }
+}
 
 function ingest(state, bundle) {
   const next = clone(state || initialState());
@@ -190,7 +209,6 @@ function ingest(state, bundle) {
     requireId(id,'条目');
     const k = recordKey(ch.origin,ch.subject,ch.id,id), old = next.records[k];
     const rec = next.records[k] = { ...old, key:k, id, chapterKey:ch.key, subject:ch.subject, title:title || old?.title || id, type:type || old?.type || '条目', parts:{...old?.parts}, originals:[...new Set([...(old?.originals || []),source])], ...extra };
-    rec.path = old?.path || `${ch.folder}/条目/${safe(id)}--${hash(k).slice(0,10)}.md`;
     rec.parts[part] = body;
     touched.add(k); return rec;
   }
@@ -301,6 +319,7 @@ function ingest(state, bundle) {
     }
   }
   if (Object.keys(next.records).length > 10000) throw new Error('条目过多；建议按学科拆分笔记库。');
+  readablePaths(next);
   return {state:next,warnings:[...new Set(warnings)],assets,originals,touched:touched.size};
 }
 
@@ -343,14 +362,13 @@ function generate(imported) {
   for(const [path,content] of imported.originals) add(path,'raw:'+path,content,false,true);
   for(const r of list) {
     const ch=s.chapters[r.chapterKey];
-    let body=`# ${label(r.title)}\n\n${wiki(ch.path,ch.title)} · ${label(r.type)} · 原 ID：${label(r.id)}\n`;
+    let body=`# ${label(r.title)}\n\n${wiki(ch.path,ch.title)} · ${label(r.type)}\n`;
     if(r.parentKey && s.records[r.parentKey]) body+='\n上级：'+link(s.records[r.parentKey])+'\n';
     body+=Object.values(r.parts).join('\n');
     const children=list.filter(x=>x.parentKey===r.key);
     if(children.length) body+=block('下级条目',children.map(x=>'- '+link(x)).join('\n'));
     const relations=[...new Set(r.relatedKeys || [])].map(k=>s.records[k]).filter(Boolean);
     if(relations.length) body+=block('关联内容',relations.map(x=>'- '+link(x)).join('\n'));
-    body+=block('导入原文',r.originals.map(p=>'- '+wiki(p,'原始 JSON')).join('\n'));
     add(r.path,r.key,body);
   }
   const originLabel=o=>o==='review'?'章节复习':'做题反馈';
@@ -397,10 +415,99 @@ function generate(imported) {
 }
 module.exports={SUBJECTS,DEFAULT_ROOT,initialState,ingest,generate,reconcile,hash,rootPath,managed,extractManaged,md};
 
+
 },
 "src/writer.cjs": function(module,exports,require){
 'use strict';
-const { generate, reconcile, hash } = require('./core.cjs');
+const { generate, reconcile, hash, extractManaged } = require('./core.cjs');
+
+// Allocate readable names without taking over unrelated files in the vault.
+function reservePaths(vault,state) {
+  const records=Object.values(state.records), used=new Set(records.map(r=>r.path.toLowerCase()));
+  for(const r of records) {
+    if(state.bindings[r.path]?.key===r.key) continue;
+    const base=r.path.replace(/\.md$/,''), candidate=r.path;
+    let index=2;
+    while(vault.getAbstractFileByPath(r.path)) {
+      do { r.path=`${base}（${index++}）.md`; } while(used.has(r.path.toLowerCase()));
+    }
+    if(r.path!==candidate) used.add(r.path.toLowerCase());
+  }
+}
+function rewriteLinks(content,path,moves) {
+  if(path.endsWith('.canvas')) {
+    let canvas; try { canvas=JSON.parse(content); } catch { return content; }
+    let changed=false;
+    for(const node of canvas.nodes || []) if(node.type==='file' && moves.has(node.file)) { node.file=moves.get(node.file); changed=true; }
+    return changed ? JSON.stringify(canvas,null,2)+'\n' : content;
+  }
+  const links=new Map(moves);
+  for(const [from,to] of moves) links.set(from.replace(/\.md$/,''),to.replace(/\.md$/,''));
+  return content.replace(/\[\[([^|\]#]+)([^\]]*\]\])/g,(all,target,rest)=>links.has(target)?'[['+links.get(target)+rest:all);
+}
+function cleanPresentation(content,record) {
+  const region=extractManaged(content,record.key);
+  if(!region) return content;
+  const id=String(record.id).replace(/[\r\n|\[\]]/g,' ').trim();
+  let block=region.block.replace(' · 原 ID：'+id+'\n','\n');
+  // Remove only the exact footer generated by v0.1.0, leaving personal text alone.
+  block=block.replace(/\n## 导入原文\n\n(?:- \[\[[^\]\n]+\|原始 JSON\]\]\n)+/g,'\n');
+  return content.slice(0,region.start)+block+content.slice(region.end);
+}
+function regionContent(content,binding) {
+  return binding.managed ? extractManaged(content,binding.key)?.block : content;
+}
+function equivalent(a,b,path) {
+  if(a===b) return true;
+  if(!path.endsWith('.canvas')) return false;
+  try { return JSON.stringify(JSON.parse(a))===JSON.stringify(JSON.parse(b)); } catch { return false; }
+}
+async function migrate(vault,state,rename) {
+  const records=Object.values(state.records), pending=records.filter(r=>r.previousPath);
+  if(!pending.length && !Object.keys(state.pendingMoves || {}).length) return 0;
+  // Validate ownership before moving anything; stale/missing indexes never authorize a rename.
+  for(const r of pending) {
+    const old=vault.getAbstractFileByPath(r.previousPath), binding=state.bindings[r.previousPath];
+    if(!old || Array.isArray(old.children) || binding?.key!==r.key || !extractManaged(await vault.read(old),r.key))
+      throw new Error(`无法确认旧笔记归属，已停止整理：${r.previousPath}`);
+  }
+  const snapshots=[];
+  for(const [path,binding] of Object.entries(state.bindings)) {
+    const file=vault.getAbstractFileByPath(path);
+    if(file && !Array.isArray(file.children) && !path.endsWith('.json')) snapshots.push({path,binding:{...binding},content:await vault.read(file)});
+  }
+  const moves=new Map(Object.entries(state.pendingMoves || {}));
+  state.pendingMoves=Object.fromEntries(moves);
+  for(const r of pending) {
+    const from=r.previousPath, file=vault.getAbstractFileByPath(from);
+    await folder(vault,r.path);
+    try { await rename(file,r.path); }
+    finally {
+      // A host rename can succeed before a later backlink update throws.
+      if(vault.getAbstractFileByPath(r.path)===file) {
+        state.bindings[r.path]=state.bindings[from]; delete state.bindings[from];
+        moves.set(from,r.path); state.pendingMoves[from]=r.path; delete r.previousPath;
+      }
+    }
+  }
+  // FileManager updates external links according to the user's Obsidian preference.
+  // Repair our own links even when that preference is off, without touching note prose or Canvas positions.
+  for(const snapshot of snapshots) {
+    const path=moves.get(snapshot.path)||snapshot.path, file=vault.getAbstractFileByPath(path);
+    if(!file || Array.isArray(file.children)) continue;
+    const record=records.find(r=>r.key===snapshot.binding.key);
+    const transform=content=>record ? cleanPresentation(rewriteLinks(content,path,moves),record) : rewriteLinks(content,path,moves);
+    const baseline=regionContent(snapshot.content,snapshot.binding);
+    await vault.process(file,current=>{
+      const result=transform(current), expected=transform(snapshot.content), resultRegion=regionContent(result,snapshot.binding);
+      if(baseline!==undefined && resultRegion!==undefined && hash(baseline)===snapshot.binding.signature && equivalent(resultRegion,regionContent(expected,snapshot.binding),path))
+        state.bindings[path]={...snapshot.binding,signature:hash(resultRegion)};
+      return result;
+    });
+  }
+  delete state.pendingMoves;
+  return moves.size;
+}
 
 async function folder(vault,path) {
   const parts=path.split('/'); parts.pop(); let current='';
@@ -415,11 +522,13 @@ async function folder(vault,path) {
   }
 }
 async function preview(vault,imported) {
+  reservePaths(vault,imported.state);
   const files=generate(imported), counts={create:0,update:0,skip:0,conflict:0};
   for(const file of files) {
-    const old=vault.getAbstractFileByPath(file.path);
+    const record=imported.state.records[file.key], sourcePath=record?.previousPath || file.path;
+    const old=vault.getAbstractFileByPath(sourcePath);
     const current=old && !Array.isArray(old.children) ? await vault.read(old) : null;
-    const result=old && Array.isArray(old.children) ? {action:'conflict'} : reconcile(current,file,imported.state.bindings[file.path]);
+    const result=old && Array.isArray(old.children) ? {action:'conflict'} : reconcile(current,file,imported.state.bindings[sourcePath]);
     counts[result.action]++;
   }
   return {files,counts};
@@ -436,8 +545,10 @@ async function conflictCopy(vault,root,file,content) {
   }
   throw new Error('冲突版本过多，请先整理 _冲突 文件夹。');
 }
-async function write(vault,imported,onProgress=()=>{}) {
-  const files=generate(imported), counts={create:0,update:0,skip:0,conflict:0,images:0}, conflicts=[];
+async function write(vault,imported,onProgress=()=>{},rename=(file,path)=>vault.rename(file,path)) {
+  reservePaths(vault,imported.state);
+  const renamed=await migrate(vault,imported.state,rename);
+  const files=generate(imported), counts={create:0,update:0,skip:0,conflict:0,images:0,renamed}, conflicts=[];
   for(const [path,bytes] of imported.assets) {
     const existing=vault.getAbstractFileByPath(path);
     if(existing) {
@@ -472,6 +583,7 @@ async function write(vault,imported,onProgress=()=>{}) {
   return {counts,conflicts};
 }
 module.exports={folder,preview,write};
+
 
 },
 "src/main.cjs": function(module,exports,require){
@@ -528,7 +640,7 @@ class ImportModal extends Modal {
     this.previewEl.createEl('p',{text:`本次识别 ${bundle.documents.length} 份资料，涉及 ${imported.touched} 个条目和 ${imported.assets.size} 张手写图片。`});
     const p=preview.counts;
     this.previewEl.createEl('p',{text:`预计新增 ${p.create} 个文件，更新 ${p.update} 个，保持 ${p.skip} 个；需保留两版 ${p.conflict} 个。`});
-    this.previewEl.createEl('p',{text:'原始 JSON 一并保留。已自行修改的导入区会另存更新版本；「我的笔记」始终保留。',cls:'msb-muted'});
+    this.previewEl.createEl('p',{text:'笔记和画布使用主题名称。已自行修改的导入区会另存更新版本；「我的笔记」始终保留。',cls:'msb-muted'});
     if(imported.warnings.length) {
       const box=this.previewEl.createEl('details'); box.createEl('summary',{text:`查看 ${imported.warnings.length} 条导入说明`});
       const ul=box.createEl('ul'); for(const warning of imported.warnings) ul.createEl('li',{text:warning});
@@ -541,7 +653,7 @@ class ImportModal extends Modal {
     let imported;
     try {
       imported=ingest(this.plugin.state,this.bundle);
-      const result=await writer.write(this.app.vault,imported,(n,total)=>this.status.textContent=`正在生成 ${n}/${total}…`);
+      const result=await writer.write(this.app.vault,imported,(n,total)=>this.status.textContent=`正在生成 ${n}/${total}…`,(file,path)=>this.app.fileManager.renameFile(file,path));
       this.plugin.state=imported.state; await this.plugin.saveData(this.plugin.state);
       const r=result.counts;
       this.status.textContent=`完成：新增 ${r.create}，更新 ${r.update}，保留 ${r.skip}。${r.conflict ? ` ${r.conflict} 个更新版本已放入 _冲突；原笔记保留。` : ''}`;
@@ -573,6 +685,7 @@ class BridgeSettings extends PluginSettingTab {
         catch(e) { new Notice(e.message); }
       }));
     new Setting(c).setName('导入资料').addButton(b=>b.setButtonText('选择 JSON / ZIP').onClick(()=>new ImportModal(this.plugin).open()));
+    new Setting(c).setName('整理已有笔记显示').setDesc('将旧文件名改为主题名称，移除正文中的内部编号与原始 JSON 入口。').addButton(b=>b.setButtonText('整理显示').onClick(()=>this.plugin.refreshDisplay()));
   }
 }
 class MathStudyBridge extends Plugin {
@@ -584,7 +697,24 @@ class MathStudyBridge extends Plugin {
     this.addRibbonIcon('book-open-check','数学学习桥：导入复习资料',open);
     this.addCommand({id:'import-material',name:'导入复习资料',callback:open});
     this.addCommand({id:'open-home',name:'打开学习首页',callback:()=>this.openHome()});
+    this.addCommand({id:'refresh-display',name:'整理已有笔记显示',callback:()=>this.refreshDisplay()});
     this.addSettingTab(new BridgeSettings(this.app,this));
+  }
+  async refreshDisplay() {
+    if(this.busy) return;
+    this.busy=true;
+    let imported;
+    try {
+      imported=ingest(this.state,{documents:[],warnings:[]});
+      const result=await writer.write(this.app.vault,imported,()=>{},(file,path)=>this.app.fileManager.renameFile(file,path));
+      this.state=imported.state; await this.saveData(this.state);
+      new Notice(`显示已整理：${result.counts.renamed} 个笔记改用主题名称。${result.counts.conflict?'手动修改已保留，更新副本在 _冲突 中。':''}`,10000);
+      await this.openHome();
+    } catch(e) {
+      if(imported) this.state=imported.state;
+      try { await this.saveData(this.state); } catch { new Notice('插件索引保存失败，请保留 data.json。',10000); }
+      new Notice('整理未全部完成，可重试：'+(e.message||e),10000);
+    } finally { this.busy=false; }
   }
   async openHome() {
     const path=this.state.root+'/首页.md';
@@ -593,6 +723,7 @@ class MathStudyBridge extends Plugin {
   }
 }
 module.exports=MathStudyBridge;
+
 
 }};
 const __cache={};

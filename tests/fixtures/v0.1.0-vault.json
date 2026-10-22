@@ -1,0 +1,173 @@
+{
+  "data": {
+    "format": "math-review",
+    "schemaVersion": 2,
+    "id": "migration-demo",
+    "chapters": [
+      {
+        "id": "det",
+        "title": "行列式",
+        "subjectId": "algebra"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "definitions",
+        "chapterId": "det",
+        "kind": "group",
+        "title": "核心定义",
+        "sections": []
+      },
+      {
+        "id": "row-addition",
+        "chapterId": "det",
+        "parentId": "definitions",
+        "kind": "knowledge",
+        "title": "倍加变换",
+        "sections": [
+          {
+            "title": "条件",
+            "body": "设 $A$ 为方阵。"
+          },
+          {
+            "title": "结论",
+            "body": "$R_i\\gets R_i+cR_j$ 不改变行列式。"
+          }
+        ],
+        "related": [
+          "definitions"
+        ]
+      }
+    ]
+  },
+  "state": {
+    "schemaVersion": 1,
+    "root": "数学学习桥",
+    "chapters": {
+      "[\"chapter\",\"review\",\"algebra\",\"det\"]": {
+        "key": "[\"chapter\",\"review\",\"algebra\",\"det\"]",
+        "origin": "review",
+        "subject": "algebra",
+        "id": "det",
+        "title": "行列式",
+        "description": "",
+        "folder": "数学学习桥/高等代数/章节复习/行列式--6c05fddbce",
+        "path": "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节目录.md"
+      }
+    },
+    "records": {
+      "[\"record\",\"review\",\"algebra\",\"det\",\"definitions\"]": {
+        "key": "[\"record\",\"review\",\"algebra\",\"det\",\"definitions\"]",
+        "id": "definitions",
+        "chapterKey": "[\"chapter\",\"review\",\"algebra\",\"det\"]",
+        "subject": "algebra",
+        "title": "核心定义",
+        "type": "目录",
+        "parts": {
+          "review": ""
+        },
+        "originals": [
+          "数学学习桥/_导入原文/migration-demo--2f4d25397197a563.json"
+        ],
+        "parentKey": null,
+        "path": "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/definitions--44258ac575.md",
+        "relatedKeys": []
+      },
+      "[\"record\",\"review\",\"algebra\",\"det\",\"row-addition\"]": {
+        "key": "[\"record\",\"review\",\"algebra\",\"det\",\"row-addition\"]",
+        "id": "row-addition",
+        "chapterKey": "[\"chapter\",\"review\",\"algebra\",\"det\"]",
+        "subject": "algebra",
+        "title": "倍加变换",
+        "type": "知识点",
+        "parts": {
+          "review": "\n## 条件\n\n设 $A$ 为方阵。\n\n## 结论\n\n$R_i\\gets R_i+cR_j$ 不改变行列式。\n"
+        },
+        "originals": [
+          "数学学习桥/_导入原文/migration-demo--2f4d25397197a563.json"
+        ],
+        "parentKey": "[\"record\",\"review\",\"algebra\",\"det\",\"definitions\"]",
+        "path": "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/row-addition--2652390c2a.md",
+        "relatedKeys": [
+          "[\"record\",\"review\",\"algebra\",\"det\",\"definitions\"]"
+        ]
+      }
+    },
+    "bindings": {
+      "数学学习桥/_导入原文/migration-demo--2f4d25397197a563.json": {
+        "key": "raw:数学学习桥/_导入原文/migration-demo--2f4d25397197a563.json",
+        "signature": "2f4d25397197a563",
+        "managed": false
+      },
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/definitions--44258ac575.md": {
+        "key": "[\"record\",\"review\",\"algebra\",\"det\",\"definitions\"]",
+        "signature": "500c8605da9b3f03",
+        "managed": true
+      },
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/row-addition--2652390c2a.md": {
+        "key": "[\"record\",\"review\",\"algebra\",\"det\",\"row-addition\"]",
+        "signature": "2db5c7233f0f4e2d",
+        "managed": true
+      },
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节目录.md": {
+        "key": "[\"chapter\",\"review\",\"algebra\",\"det\"]",
+        "signature": "865a10dc5092b396",
+        "managed": true
+      },
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节关系.canvas": {
+        "key": "canvas:[\"chapter\",\"review\",\"algebra\",\"det\"]",
+        "signature": "ff8fc4ba15a5f610",
+        "managed": false
+      },
+      "数学学习桥/高等代数/学科目录.md": {
+        "key": "subject:algebra",
+        "signature": "63e456cb43eaae09",
+        "managed": true
+      },
+      "数学学习桥/数学分析/学科目录.md": {
+        "key": "subject:analysis",
+        "signature": "8d6fde745fa6a00a",
+        "managed": true
+      },
+      "数学学习桥/首页.md": {
+        "key": "home",
+        "signature": "cfc2cd96b9647104",
+        "managed": true
+      }
+    }
+  },
+  "files": [
+    [
+      "数学学习桥/_导入原文/migration-demo--2f4d25397197a563.json",
+      "{\n  \"format\": \"math-review\",\n  \"schemaVersion\": 2,\n  \"id\": \"migration-demo\",\n  \"chapters\": [\n    {\n      \"id\": \"det\",\n      \"title\": \"行列式\",\n      \"subjectId\": \"algebra\"\n    }\n  ],\n  \"nodes\": [\n    {\n      \"id\": \"definitions\",\n      \"chapterId\": \"det\",\n      \"kind\": \"group\",\n      \"title\": \"核心定义\",\n      \"sections\": []\n    },\n    {\n      \"id\": \"row-addition\",\n      \"chapterId\": \"det\",\n      \"parentId\": \"definitions\",\n      \"kind\": \"knowledge\",\n      \"title\": \"倍加变换\",\n      \"sections\": [\n        {\n          \"title\": \"条件\",\n          \"body\": \"设 $A$ 为方阵。\"\n        },\n        {\n          \"title\": \"结论\",\n          \"body\": \"$R_i\\\\gets R_i+cR_j$ 不改变行列式。\"\n        }\n      ],\n      \"related\": [\n        \"definitions\"\n      ]\n    }\n  ]\n}\n"
+    ],
+    [
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/definitions--44258ac575.md",
+      "<!-- msb:44258ac575594e4b:begin -->\n# 核心定义\n\n[[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节目录|行列式]] · 目录 · 原 ID：definitions\n\n## 下级条目\n\n- [[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/row-addition--2652390c2a|倍加变换]]\n\n## 导入原文\n\n- [[数学学习桥/_导入原文/migration-demo--2f4d25397197a563.json|原始 JSON]]\n<!-- msb:44258ac575594e4b:end -->\n\n## 我的笔记\n\n在这里写自己的理解；重复导入会保留本区域。\n"
+    ],
+    [
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/row-addition--2652390c2a.md",
+      "<!-- msb:2652390c2a5f204e:begin -->\n# 倍加变换\n\n[[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节目录|行列式]] · 知识点 · 原 ID：row-addition\n\n上级：[[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/definitions--44258ac575|核心定义]]\n\n## 条件\n\n设 $A$ 为方阵。\n\n## 结论\n\n$R_i\\gets R_i+cR_j$ 不改变行列式。\n\n## 关联内容\n\n- [[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/definitions--44258ac575|核心定义]]\n\n## 导入原文\n\n- [[数学学习桥/_导入原文/migration-demo--2f4d25397197a563.json|原始 JSON]]\n<!-- msb:2652390c2a5f204e:end -->\n\n## 我的笔记\n\n在这里写自己的理解；重复导入会保留本区域。\n"
+    ],
+    [
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节目录.md",
+      "<!-- msb:6c05fddbceaf1249:begin -->\n# 行列式\n\n[[数学学习桥/首页|学习首页]] · 高等代数 · 章节复习\n\n\n\n[[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节关系.canvas|打开章节关系画布]]\n\n- [[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/definitions--44258ac575|核心定义]]\n  - [[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/row-addition--2652390c2a|倍加变换]]\n\n\n导入讲解不会自动标为独立掌握。\n<!-- msb:6c05fddbceaf1249:end -->\n\n## 我的笔记\n\n在这里写自己的理解；重复导入会保留本区域。\n"
+    ],
+    [
+      "数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节关系.canvas",
+      "{\n  \"nodes\": [\n    {\n      \"id\": \"6c05fddbceaf1249\",\n      \"type\": \"file\",\n      \"file\": \"数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节目录.md\",\n      \"x\": 0,\n      \"y\": 0,\n      \"width\": 420,\n      \"height\": 240\n    },\n    {\n      \"id\": \"2652390c2a5f204e\",\n      \"type\": \"file\",\n      \"file\": \"数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/row-addition--2652390c2a.md\",\n      \"x\": 1000,\n      \"y\": 0,\n      \"width\": 420,\n      \"height\": 200\n    },\n    {\n      \"id\": \"44258ac575594e4b\",\n      \"type\": \"file\",\n      \"file\": \"数学学习桥/高等代数/章节复习/行列式--6c05fddbce/条目/definitions--44258ac575.md\",\n      \"x\": 500,\n      \"y\": 0,\n      \"width\": 420,\n      \"height\": 200\n    }\n  ],\n  \"edges\": [\n    {\n      \"id\": \"6f031e89cdeff533\",\n      \"fromNode\": \"44258ac575594e4b\",\n      \"fromSide\": \"right\",\n      \"toNode\": \"2652390c2a5f204e\",\n      \"toSide\": \"left\",\n      \"label\": \"包含\"\n    },\n    {\n      \"id\": \"b609b8eb4a96e1d1\",\n      \"fromNode\": \"6c05fddbceaf1249\",\n      \"fromSide\": \"right\",\n      \"toNode\": \"44258ac575594e4b\",\n      \"toSide\": \"left\"\n    },\n    {\n      \"id\": \"e6426a0a5a6ce7fc\",\n      \"fromNode\": \"2652390c2a5f204e\",\n      \"fromSide\": \"bottom\",\n      \"toNode\": \"44258ac575594e4b\",\n      \"toSide\": \"top\",\n      \"color\": \"5\",\n      \"label\": \"关联\"\n    }\n  ]\n}\n"
+    ],
+    [
+      "数学学习桥/高等代数/学科目录.md",
+      "<!-- msb:fded6bc91f469e37:begin -->\n# 高等代数\n\n[[数学学习桥/首页|学习首页]]\n\n## 章节复习\n\n- [[数学学习桥/高等代数/章节复习/行列式--6c05fddbce/章节目录|行列式]]\n\n## 做题反馈\n\n暂无资料。\n<!-- msb:fded6bc91f469e37:end -->\n\n## 我的笔记\n\n在这里写自己的理解；重复导入会保留本区域。\n"
+    ],
+    [
+      "数学学习桥/数学分析/学科目录.md",
+      "<!-- msb:1f27efd17473f393:begin -->\n# 数学分析\n\n[[数学学习桥/首页|学习首页]]\n\n## 章节复习\n\n暂无资料。\n\n## 做题反馈\n\n暂无资料。\n<!-- msb:1f27efd17473f393:end -->\n\n## 我的笔记\n\n在这里写自己的理解；重复导入会保留本区域。\n"
+    ],
+    [
+      "数学学习桥/首页.md",
+      "<!-- msb:d2c8c28e29f4186c:begin -->\n# 数学学习桥\n\n从这里进入章节，点击链接查看知识点、追问和做题反馈。\n\n- [[数学学习桥/高等代数/学科目录|高等代数]] · 1 个章节目录\n- [[数学学习桥/数学分析/学科目录|数学分析]] · 0 个章节目录\n\n## 日常使用\n\n1. 继续在复习台学习，导出 JSON 或 ZIP。\n2. 运行「数学学习桥：导入复习资料」。\n3. 查看章节目录、关联笔记或 Canvas，在每页「我的笔记」补充理解。\n\n本版是资料单向导入；Obsidian 中的修改不会自动写回网页。导入区发生手动修改时，更新内容另存到 `_冲突` 目录。\n<!-- msb:d2c8c28e29f4186c:end -->\n\n## 我的笔记\n\n在这里写自己的理解；重复导入会保留本区域。\n"
+    ]
+  ]
+}
