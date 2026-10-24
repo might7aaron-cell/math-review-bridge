@@ -72,6 +72,25 @@ BRAT 作者的安装说明：https://tfthacker.com/brat-quick-guide
 
 本版是单向导入。Obsidian 内的编辑、复习状态和用时不会自动回写 Netlify；没有重做网页端的刷题、计时或记忆调度功能。网页现有使用流程不受影响。
 
+## 从 ChatGPT 生成学习资料（独立辅助工具）
+
+多个数学学习窗口可以使用同一套严格生成规范，输出可导入的 `math-review v2` 资料。定义、定理、数学思想、母题、变式、自测和有证据的疑难反馈都放在已有字段中；这套工具不改变插件核心，不需要更新安装包，也不属于 0.1.1 Release。
+
+- [可直接复制的统一提示词](docs/chatgpt-learning-prompt.md)
+- [真实字段契约、层级与跨章节引用规则](docs/math-review-v2-contract.md)
+- [数学分析16窗口与高代协作](docs/multi-window-guide.md)
+- [iPad：生成、实际校验、复习台与 Obsidian 导入](docs/ipad-workflow.md)
+- 完整教学示例：[数学分析](examples/learning/analysis.math-review.json)、[高等代数](examples/learning/algebra.math-review.json)；均为原创示例，模拟疑难不代表用户记录。
+- [校验及合并脚本](scripts/validate-math-review.cjs)、[可选独立浏览器工具](tools/math-review-check.html)、[正确与错误测试输入](tests/fixtures/authoring/README.md)、[验证记录](docs/authoring-validation.md)。
+
+```sh
+node scripts/validate-math-review.cjs examples/learning/analysis.math-review.json
+node scripts/validate-math-review.cjs window01.json window02.json --out combined.math-review.json
+npm test
+```
+
+只需 Node.js 18+，无需安装依赖。跨章节关联应放进同一个合并 JSON；仅把多个文件放进 ZIP 不保证链接解析。校验器检查结构与引用，不证明数学结论或学习反馈的真实性。iPad 可将脚本和 JSON 交给具备 Node 执行能力的 ChatGPT 窗口实际检查，详见使用指南。
+
 ## 给维护者
 
 不需要安装构建依赖；ZIP 浏览器库已随源码附带。Node.js 18 或更高版本仅用于开发，不用于移动端运行。

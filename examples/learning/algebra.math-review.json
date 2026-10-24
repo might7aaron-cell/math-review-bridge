@@ -1,0 +1,381 @@
+{
+  "format": "math-review",
+  "schemaVersion": 2,
+  "id": "alg-learning-example",
+  "title": "高等代数 · 行列式与线性映射（原创教学示例）",
+  "coverage": "完整演示基础定义、定理推导、数学思想、代表母题、变式、自测、模拟疑难及跨章节关联；未使用用户真实笔记或未经核对的教材题号。",
+  "chapters": [
+    {
+      "id": "alg-determinants",
+      "subjectId": "algebra",
+      "title": "行列式",
+      "description": "实数域上的原创教学示例。"
+    },
+    {
+      "id": "alg-linear-maps",
+      "subjectId": "algebra",
+      "title": "线性映射与不变子空间",
+      "description": "只收录与本例行列式结构直接相关的内容。"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "alg-determinants-concepts",
+      "chapterId": "alg-determinants",
+      "parentId": null,
+      "kind": "group",
+      "title": "基础与推导",
+      "sections": [],
+      "related": [],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "alg-determinants-definition",
+      "chapterId": "alg-determinants",
+      "parentId": "alg-determinants-concepts",
+      "kind": "knowledge",
+      "title": "行列式：交替多线性与归一化",
+      "sections": [
+        {
+          "title": "基础定义",
+          "body": "在实数域上，$n$ 阶行列式是关于矩阵各行的交替多线性函数，且 $\\det I_n=1$。交替指两行相同时值为0；交换两行改变符号。"
+        },
+        {
+          "title": "展开式与结构",
+          "body": "置换公式为 $\\det A=\\sum_{\\sigma\\in S_n}\\operatorname{sgn}(\\sigma)\\prod_{i=1}^n a_{i,\\sigma(i)}$。每一项每行每列各取一个元素，符号记录置换奇偶性。"
+        },
+        {
+          "title": "意图与用途",
+          "body": "要在坐标中记录线性映射对定向体积的缩放，同时识别退化。多重线性描述逐个方向的线性变化，交替性描述方向重合后体积为零。"
+        }
+      ],
+      "related": [],
+      "tags": [
+        "基础定义"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "为何一般没有 $\\det(A+B)=\\det A+\\det B$？",
+        "answer": "多重线性是固定其他行，只改变某一行时的线性。取 $A=B=I_2$，左边为4，右边为2。"
+      }
+    },
+    {
+      "id": "alg-determinants-row-add",
+      "chapterId": "alg-determinants",
+      "parentId": "alg-determinants-concepts",
+      "kind": "knowledge",
+      "title": "倍加变换不改变行列式的原因",
+      "sections": [
+        {
+          "title": "定理及条件",
+          "body": "保持其他行不变，把第 $i$ 行换为 $r_i+c r_j$，其中 $i\\ne j$，行列式不变。"
+        },
+        {
+          "title": "关键推导",
+          "body": "对第 $i$ 行展开多重线性，得到原行列式加上 $c$ 倍的新行列式。后者第 $i$ 行与第 $j$ 行相同，因交替性为0。"
+        },
+        {
+          "title": "边界",
+          "body": "条件 $i\\ne j$ 必须保留。若把某行自身乘 $1+c$，行列式也乘 $1+c$，通常不保持。"
+        }
+      ],
+      "related": [
+        "alg-determinants-definition"
+      ],
+      "tags": [
+        "定理推导"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "alg-determinants-rank-one",
+      "chapterId": "alg-determinants",
+      "parentId": "alg-determinants-concepts",
+      "kind": "knowledge",
+      "title": "秩一更新：把高阶行列式压缩成一个标量",
+      "sections": [
+        {
+          "title": "结构辨认",
+          "body": "$uv^{\\mathsf T}$ 的第 $j$ 列为 $v_j u$，所有列共线，秩至多为1。"
+        },
+        {
+          "title": "公式与条件",
+          "body": "对可逆实方阵 $D$，$\\det(D+uv^{\\mathsf T})=\\det D\\,(1+v^{\\mathsf T}D^{-1}u)$。"
+        },
+        {
+          "title": "公式推导",
+          "body": "先令 $w=D^{-1}u$。对 $I+wv^{\\mathsf T}$ 按列多重线性展开：选取两列或更多更新列的项均因共线而为0；只选第 $j$ 列更新的项为 $v_jw_j$；不选更新列的项为1。因此 $\\det(I+wv^{\\mathsf T})=1+v^{\\mathsf T}w$，再利用行列式乘法得到结论。"
+        },
+        {
+          "title": "D 奇异时",
+          "body": "不能写 $D^{-1}$。可用恒等式 $\\det(D+uv^{\\mathsf T})=\\det D+v^{\\mathsf T}\\operatorname{adj}(D)u$；同样按列展开，用余子式表达只更新一列的贡献即可，对所有方阵成立。"
+        }
+      ],
+      "related": [
+        "alg-determinants-definition",
+        "alg-linear-maps-rank"
+      ],
+      "tags": [
+        "数学思想",
+        "低秩结构"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "alg-determinants-practice",
+      "chapterId": "alg-determinants",
+      "parentId": null,
+      "kind": "group",
+      "title": "母题、变式与检验",
+      "sections": [],
+      "related": [],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "alg-determinants-mother",
+      "chapterId": "alg-determinants",
+      "parentId": "alg-determinants-practice",
+      "kind": "knowledge",
+      "title": "补充例：对角全为x、非对角全为1",
+      "sections": [
+        {
+          "title": "题目（原创补充例）",
+          "body": "$n\\ge2$，矩阵 $A_n(x)$ 的对角元素均为 $x$，非对角元素均为1。求其行列式。"
+        },
+        {
+          "title": "识别与选择",
+          "body": "写成 $A_n(x)=(x-1)I_n+\\mathbf1\\mathbf1^{\\mathsf T}$，其中 $\\mathbf1$ 为全1列向量。这是标量矩阵加秩一更新。"
+        },
+        {
+          "title": "完整解答",
+          "body": "当 $x\\ne1$，秩一公式给出 $\\det A_n(x)=(x-1)^n(1+n/(x-1))=(x-1)^{n-1}(x+n-1)$。当 $x=1$，所有行相同，且 $n\\ge2$，行列式为0；右式也为0。故公式对所有实数 $x$ 成立。"
+        },
+        {
+          "title": "题目意图",
+          "body": "从重复行列信息提取低秩结构。若直接用含逆矩阵的公式，必须单独处理不可逆参数；也可用多项式恒等原则补齐。"
+        },
+        {
+          "title": "第二条路线",
+          "body": "全1向量张成的直线上，特征值为 $x+n-1$；坐标和为0的 $n-1$ 维子空间上，特征值为 $x-1$。两个不变子空间直和为 $\\mathbb R^n$，取适配基即可得到同一行列式。"
+        }
+      ],
+      "related": [
+        "alg-determinants-rank-one",
+        "alg-determinants-variant",
+        "alg-linear-maps-decomposition"
+      ],
+      "tags": [
+        "代表母题",
+        "补充例"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "$n=3$ 时，哪些 $x$ 使矩阵奇异？",
+        "answer": "$\\det A_3(x)=(x-1)^2(x+2)$，因此 $x=1$ 或 $x=-2$。"
+      }
+    },
+    {
+      "id": "alg-determinants-variant",
+      "chapterId": "alg-determinants",
+      "parentId": "alg-determinants-practice",
+      "kind": "knowledge",
+      "title": "变式：对角不同与奇异参数",
+      "sections": [
+        {
+          "title": "变式一（原创）",
+          "body": "$D=\\operatorname{diag}(d_1,\\ldots,d_n)$，各 $d_i\\ne0$。求 $\\det(D+uv^{\\mathsf T})$。"
+        },
+        {
+          "title": "解答与迁移",
+          "body": "结果为 $(\\prod_i d_i)(1+\\sum_i u_iv_i/d_i)$。相同对角变为不同对角，但“可逆部分+秩一扰动”结构保持。"
+        },
+        {
+          "title": "变式二与边界",
+          "body": "若 $D=\\operatorname{diag}(0,2)$ 且 $u=v=(1,1)^{\\mathsf T}$，逆矩阵公式失效；直接算 $\\det\\begin{pmatrix}1&1\\\\1&3\\end{pmatrix}=2$，也可用伴随矩阵恒等式。"
+        },
+        {
+          "title": "辨识分支",
+          "body": "先判断底矩阵可逆，决定使用逆矩阵版本还是余子式版本；不能把分母为零当作结果无意义的证明。"
+        }
+      ],
+      "related": [
+        "alg-determinants-rank-one",
+        "alg-determinants-mother"
+      ],
+      "tags": [
+        "变式",
+        "边界条件"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "alg-determinants-feedback",
+      "chapterId": "alg-determinants",
+      "parentId": "alg-determinants-practice",
+      "kind": "question",
+      "title": "模拟疑难：所有行一起变化，是否仍是线性",
+      "sections": [
+        {
+          "title": "模拟记录",
+          "body": "该问题与诊断是原创教学情境，不代表用户曾经问过或犯过此错误。"
+        },
+        {
+          "title": "解释",
+          "body": "行列式对每一行分别线性。若同时改变两行，多重线性会出现混合项；把两行都乘2，二阶行列式乘4。"
+        },
+        {
+          "title": "下一步",
+          "body": "用一个二阶例子逐行展开，再说明为何倍加另一行的混合项恰好为0。未提供独立作答，状态保持未检验。"
+        }
+      ],
+      "related": [
+        "alg-determinants-definition",
+        "alg-determinants-row-add"
+      ],
+      "question": "【教学模拟】为什么可以拆一行，不能把 det(A+B) 拆成两个行列式？",
+      "evidence": "仅为展示 question、evidence、historicalDiagnosis 字段而构造；无真实作答证据。",
+      "historicalDiagnosis": {
+        "evidence": "教学模拟：把分别线性误认为矩阵整体线性。",
+        "bottleneck": "模拟错因：没有固定其他行。",
+        "nextCheck": "待作答：展开两个二阶矩阵之和的行列式。"
+      },
+      "tags": [
+        "模拟疑难",
+        "未检验"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "计算 $\\det(2I_3)$，并解释倍数来自哪里。",
+        "answer": "等于8。三行分别乘2，每次贡献一个因子2。"
+      }
+    },
+    {
+      "id": "alg-determinants-check",
+      "chapterId": "alg-determinants",
+      "parentId": "alg-determinants-practice",
+      "kind": "knowledge",
+      "title": "独立自测：先选公式，再检查边界",
+      "sections": [
+        {
+          "title": "作答要求",
+          "body": "先不展开答案。写出底矩阵、两个向量、成立条件与一个交叉检验；看到答案不等于独立掌握。"
+        }
+      ],
+      "related": [
+        "alg-determinants-rank-one"
+      ],
+      "tags": [
+        "自测"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "$D=\\operatorname{diag}(2,3)$，$u=(1,1)^{\\mathsf T}$，$v=(1,-1)^{\\mathsf T}$，计算 $\\det(D+uv^{\\mathsf T})$。",
+        "answer": "$\\det D=6$，$v^{\\mathsf T}D^{-1}u=1/2-1/3=1/6$，故结果为7。直接计算 $\\det\\begin{pmatrix}3&-1\\\\1&2\\end{pmatrix}=7$，一致。"
+      }
+    },
+    {
+      "id": "alg-linear-maps-group",
+      "chapterId": "alg-linear-maps",
+      "parentId": null,
+      "kind": "group",
+      "title": "线性映射与结构联系",
+      "sections": [],
+      "related": [],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "alg-linear-maps-rank",
+      "chapterId": "alg-linear-maps",
+      "parentId": "alg-linear-maps-group",
+      "kind": "knowledge",
+      "title": "方阵的秩、可逆性与行列式",
+      "sections": [
+        {
+          "title": "定理及范围",
+          "body": "对 $n\\times n$ 实方阵 $A$，$\\det A\\ne0$、$\\operatorname{rank}A=n$、$A$ 可逆以及对应映射核为零等价。非方阵没有这里的行列式和双侧逆等价表述。"
+        },
+        {
+          "title": "推导联系",
+          "body": "若核为零，则列向量线性无关，构成 $\\mathbb R^n$ 的一组基，映射可逆。可逆时由 $\\det A\\det A^{-1}=1$ 得行列式非零。若列相关，多重线性与交替性给行列式为零。"
+        },
+        {
+          "title": "未来用途",
+          "body": "将计算行列式的零点转成判断线性方程是否唯一可解。"
+        }
+      ],
+      "related": [
+        "alg-determinants-rank-one",
+        "alg-determinants-mother"
+      ],
+      "tags": [
+        "跨章节联系"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "alg-linear-maps-decomposition",
+      "chapterId": "alg-linear-maps",
+      "parentId": "alg-linear-maps-group",
+      "kind": "knowledge",
+      "title": "全1矩阵的两个不变子空间",
+      "sections": [
+        {
+          "title": "空间分解",
+          "body": "令 $J=\\mathbf1\\mathbf1^{\\mathsf T}$。在 $U=\\operatorname{span}(\\mathbf1)$ 上，$J$ 是乘以 $n$；在 $W=\\{z:\\sum_i z_i=0\\}$ 上，$J$ 为零。实数域上 $\\mathbb R^n=U\\oplus W$。"
+        },
+        {
+          "title": "迁移",
+          "body": "因此 $(x-1)I+J$ 在这两部分分别乘以 $x+n-1$ 与 $x-1$。这是从行列式计算转向“不变子空间分解”的路线。"
+        },
+        {
+          "title": "边界提醒",
+          "body": "上述直和论证按实数域陈述，不应未经检查推广到特征整除 n 的域。"
+        }
+      ],
+      "related": [
+        "alg-determinants-mother"
+      ],
+      "tags": [
+        "数学思想",
+        "不变子空间"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    }
+  ]
+}
