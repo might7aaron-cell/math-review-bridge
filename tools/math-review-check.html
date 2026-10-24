@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>数学资料检查</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f5f1;color:#202b27;font:17px/1.65 system-ui,sans-serif}main{max-width:960px;margin:auto;padding:32px 24px}h1{font-size:30px;margin:4px 0}p{margin:10px 0}.tag{color:#356c59;font-size:13px;letter-spacing:.12em}.panel{background:white;border:1px solid #dbe2da;border-radius:16px;padding:24px;margin:24px 0}label{display:block;font-weight:600;margin-bottom:10px}textarea{width:100%;min-height:260px;resize:vertical;padding:14px;border:1px solid #a4b5a9;border-radius:8px;font:14px/1.5 ui-monospace,monospace}button{border:0;border-radius:8px;background:#285e4b;color:white;font:inherit;padding:11px 18px;cursor:pointer}button:disabled{opacity:.45;cursor:default}input{max-width:100%;font:inherit}.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.65 ui-monospace,monospace}.muted{font-size:14px;color:#5d6f64}a{color:#285e4b}:focus-visible{outline:3px solid #ba791b;outline-offset:3px}
+</style><main><div class="tag">MATH REVIEW · v2</div><h1>先检查，再导入</h1>
+<p>粘贴一份 JSON，或选择多个学习窗口的文件。跨章节关联会在合并后检查。</p>
+<p class="muted">内容只在本页内存中处理，没有上传或自动保存。结构通过不代表数学证明、出处或个人诊断正确。</p>
+<section class="panel"><label for="files">选择 JSON 文件（可多选）</label><input id="files" type="file" accept=".json,application/json" multiple><p id="selection" class="muted">尚未选择文件；也可以在下面粘贴。</p>
+<label for="input">或粘贴完整 JSON</label><textarea id="input" spellcheck="false" placeholder="从 { 开始，到 } 结束，不含代码围栏"></textarea>
+<div class="actions"><button id="check">检查并准备导入文件</button><button id="download" disabled>下载通过检查的 JSON</button></div></section>
+<section class="panel" aria-live="polite"><strong id="status">等待检查</strong><pre id="report">检查字段、ID、层级、章节归属、引用与常见转义错误。</pre></section>
+<p class="muted">生成规范 authoring-v1；仅接收 math-review v2。未知字段会报错；不同内容使用同一 ID 时停止合并，请先决定采用哪个完整版本。复习台导出请选择“资料 JSON”，不要选择完整备份。</p></main>
+<script>
+'use strict';
+// Authoring profile v1: a deliberately strict subset of the existing v2 importer.
+// No dependency on Obsidian or plugin internals; also embedded in the browser helper.
+(function () {
+  const MAX_BYTES = 30 * 1024 * 1024;
+  const ID = /^[A-Za-z][A-Za-z0-9_.-]{0,119}$/;
+  const object = x => x !== null && typeof x === 'object' && !Array.isArray(x);
+  const own = (x, k) => Object.prototype.hasOwnProperty.call(x, k);
+  const byteLength = s => new TextEncoder().encode(s).length;
+  const stable = x => Array.isArray(x) ? x.map(stable) : object(x)
+    ? Object.fromEntries(Object.keys(x).sort().map(k => [k, stable(x[k])])) : x;
+
+  // JSON.parse accepts duplicate object keys; reject them before they can hide data.
+  // Called only after JSON.parse has accepted the syntax. This scanner never evals input.
+  function duplicateKeys(text) {
+    let i = 0; const errors = [];
+    const ws = () => { while (/\s/.test(text[i] || '') && i < text.length) i++; };
+    function string() {
+      const start = i++;
+      while (i < text.length) {
+        if (text[i] === '\\') { i += 2; continue; }
+        if (text[i++] === '"') break;
+      }
+      return JSON.parse(text.slice(start, i));
+    }
+    function value(path, depth) {
+      if (depth > 64) throw new Error('JSON 嵌套超过 64 层，请简化资料结构。');
+      ws();
+      if (text[i] === '{') {
+        i++; ws(); const keys = new Set();
+        while (text[i] !== '}') {
+          const key = string(); ws(); i++;
+          const next = path + '/' + key.replace(/~/g, '~0').replace(/\//g, '~1');
+          if (keys.has(key)) errors.push({code:'duplicate-key',path:next,message:'JSON 对象字段重复。'});
+          keys.add(key); value(next, depth + 1); ws();
+          if (text[i] !== ',') break;
+          i++; ws();
+        }
+        i++;
+      } else if (text[i] === '[') {
+        i++; ws(); let n = 0;
+        while (text[i] !== ']') {
+          value(path + '/' + n++, depth + 1); ws();
+          if (text[i] !== ',') break;
+          i++; ws();
+        }
+        i++;
+      } else if (text[i] === '"') string();
+      else { while (i < text.length && !/[\s,\]}]/.test(text[i])) i++; }
+    }
+    value('', 0); return errors;
+  }
+
+  function parseText(text) {
+    if (typeof text !== 'string') return {errors:[{code:'json',path:'',message:'输入必须是 JSON 文本。'}]};
+    if (byteLength(text) > MAX_BYTES) return {errors:[{code:'size',path:'',message:'单份资料不得超过 30 MiB。'}]};
+    try {
+      // The bridge strips BOM, but the reviewed web importer uses JSON.parse as-is.
+      // Keep generated input portable across both by requiring UTF-8 without BOM.
+      if (text.startsWith('\uFEFF')) return {errors:[{code:'encoding',path:'',message:'请保存为 UTF-8 无 BOM；插件可容忍 BOM，但复习台未必接受。'}]};
+      const data = JSON.parse(text), errors = duplicateKeys(text);
+      return {data, errors};
+    } catch (e) { return {errors:[{code:'json',path:'',message:e.message}]}; }
+  }
+
+  function validate(data) {
+    const errors = [], warnings = [];
+    const fail = (code, path, message) => errors.push({code,path,message});
+    const warn = (code, path, message) => warnings.push({code,path,message});
+    function shape(x, path, allowed, required = []) {
+      if (!object(x)) { fail('type',path,'应为对象。'); return false; }
+      for (const k of required) if (!own(x,k)) fail('required',path+'/'+k,'缺少必需字段。');
+      for (const k of Object.keys(x)) if (!allowed.includes(k)) fail('unknown-field',path+'/'+k,'生成规范不接受此字段；请把正文放入 sections，勿依赖插件忽略字段。');
+      return true;
+    }
+    function string(x, path, max = 200000, nonempty = true) {
+      if (typeof x !== 'string' || x.length > max || (nonempty && !x.trim())) {
+        fail('text',path,`应为${nonempty?'非空':''}字符串，最长 ${max} 字符。`); return false;
+      }
+      if (/[\u0000-\u0009\u000b-\u001f\u007f]/.test(x)) fail('control-character',path,'含控制字符；检查 LaTeX 是否误用了单反斜杠（如 \\frac、\\begin、\\to）。正文换行请用 \\n。');
+      return true;
+    }
+    function id(x,path) {
+      if (typeof x !== 'string' || !ID.test(x) || ['constructor','prototype','__proto__'].includes(x)) {
+        fail('id',path,'ID 须以英文字母开头，仅含字母、数字、_、.、-，最长120字符，不能使用保留名。'); return false;
+      }
+      return true;
+    }
+    function array(x,path,max,min=0) {
+      if (!Array.isArray(x) || x.length < min || x.length > max) { fail('array',path,`应为数组，长度 ${min}–${max}。`); return false; }
+      return true;
+    }
+    function strings(x,path,maxItems,maxLength) {
+      if (array(x,path,maxItems)) x.forEach((s,i)=>string(s,path+'/'+i,maxLength));
+    }
+    function plainDetail(x,path,depth=0) {
+      if (depth>8) { fail('depth',path,'历史诊断超过插件可展示的8层。'); return; }
+      if (typeof x==='string') string(x,path);
+      else if (Array.isArray(x)) x.forEach((v,i)=>plainDetail(v,path+'/'+i,depth+1));
+      else if (object(x)) for(const [k,v] of Object.entries(x)) {
+        if (['__proto__','constructor','prototype'].includes(k)) fail('reserved-key',path+'/'+k,'不允许保留字段名。');
+        plainDetail(v,path+'/'+k,depth+1);
+      }
+      else if (x!==null && typeof x!=='boolean' && !(typeof x==='number' && Number.isFinite(x))) fail('type',path,'诊断值必须可表示为 JSON。');
+    }
+
+    if (!shape(data,'',['format','schemaVersion','id','title','coverage','chapters','nodes'],['format','schemaVersion','chapters','nodes'])) return {ok:false,errors,warnings};
+    if (data.format!=='math-review') fail('format','/format','必须为 math-review；不是备份、交接或逐题反馈格式。');
+    if (data.schemaVersion!==2) fail('version','/schemaVersion','本生成规范只接受数字 2；插件另有 v1 兼容能力。');
+    if (own(data,'id')) id(data.id,'/id');
+    for(const k of ['title','coverage']) if(own(data,k)) string(data[k],'/'+k);
+    const chapters = new Map(), nodes = new Map(), paths = new Map();
+    if (array(data.chapters,'/chapters',200)) data.chapters.forEach((c,i)=>{
+      const p='/chapters/'+i;
+      if(!shape(c,p,['id','subjectId','title','description','number'],['id','subjectId','title'])) return;
+      if(id(c.id,p+'/id')) {
+        if(chapters.has(c.id)) fail('duplicate-chapter',p+'/id','章节 ID 必须全局唯一（包括跨学科）。');
+        else chapters.set(c.id,c);
+      }
+      if(!['algebra','analysis'].includes(c.subjectId)) fail('subject',p+'/subjectId','只接受 algebra 或 analysis。');
+      string(c.title,p+'/title',200);
+      if(own(c,'description')) string(c.description,p+'/description',200000,false);
+      if(own(c,'number') && (!Number.isInteger(c.number)||c.number<1||c.number>100)) fail('number',p+'/number','number 为1–100的整数；教材编号不确定时省略。');
+    });
+    if(array(data.nodes,'/nodes',5000)) data.nodes.forEach((n,i)=>{
+      const p='/nodes/'+i;
+      if(!shape(n,p,['id','chapterId','subjectId','parentId','kind','title','summary','question','evidence','sections','related','selfCheck','source','tags','historicalDiagnosis'],['id','chapterId','kind','title','sections'])) return;
+      if(id(n.id,p+'/id')) {
+        if(nodes.has(n.id)) fail('duplicate-node',p+'/id','节点 ID 必须全局唯一；不能靠学科或章节消除歧义。');
+        else { nodes.set(n.id,n); paths.set(n.id,p); }
+      }
+      id(n.chapterId,p+'/chapterId');
+      const c=chapters.get(n.chapterId);
+      if(!c) fail('chapter',p+'/chapterId','必须引用本份资料中的章节。');
+      if(own(n,'subjectId') && (!['algebra','analysis'].includes(n.subjectId)||n.subjectId!==c?.subjectId)) fail('subject',p+'/subjectId','节点学科必须与章节一致；通常省略并由章节确定。');
+      if(own(n,'parentId') && n.parentId!==null) id(n.parentId,p+'/parentId');
+      if(!['group','knowledge','question'].includes(n.kind)) fail('kind',p+'/kind','只用 group、knowledge、question；定义/定理/母题等用 sections 和 tags 表达。');
+      string(n.title,p+'/title',500);
+      for(const k of ['summary','question','evidence']) if(own(n,k)) string(n[k],p+'/'+k,k==='summary'?4000:200000,false);
+      if(array(n.sections,p+'/sections',100)) n.sections.forEach((s,j)=>{
+        const q=p+'/sections/'+j;
+        if(shape(s,q,['title','body'],['title','body'])) { string(s.title,q+'/title',300); string(s.body,q+'/body'); }
+      });
+      if(n.kind!=='group' && Array.isArray(n.sections) && !n.sections.length) warn('empty-content',p+'/sections','非分组节点没有讲解正文，请确认不是占位条目。');
+      if(own(n,'selfCheck') && shape(n.selfCheck,p+'/selfCheck',['prompt','answer'],['prompt','answer'])) {
+        string(n.selfCheck.prompt,p+'/selfCheck/prompt'); string(n.selfCheck.answer,p+'/selfCheck/answer');
+      }
+      if(own(n,'source') && shape(n.source,p+'/source',['label','references'],['label'])) {
+        string(n.source.label,p+'/source/label',500);
+        if(own(n.source,'references')) strings(n.source.references,p+'/source/references',100,3000);
+      }
+      if(own(n,'tags')) strings(n.tags,p+'/tags',100,200);
+      if(own(n,'historicalDiagnosis')) {
+        if(!object(n.historicalDiagnosis)) fail('type',p+'/historicalDiagnosis','诊断应为对象，记录真实证据；无实际作答则省略。');
+        else plainDetail(n.historicalDiagnosis,p+'/historicalDiagnosis');
+      }
+      if(own(n,'related') && array(n.related,p+'/related',100)) {
+        const seen=new Set();
+        n.related.forEach((r,j)=>{
+          id(r,p+'/related/'+j);
+          if(seen.has(r)) fail('duplicate-reference',p+'/related/'+j,'关联重复。');
+          seen.add(r);
+        });
+      }
+    });
+    for(const [nodeId,n] of nodes) {
+      const p=paths.get(nodeId);
+      if(n.parentId!=null) {
+        const parent=nodes.get(n.parentId);
+        if(!parent) fail('parent',p+'/parentId','父节点必须在本份资料中。');
+        else if(parent.chapterId!==n.chapterId || parent.kind!=='group') fail('parent',p+'/parentId','父节点必须是同章的 group。');
+      }
+      if(Array.isArray(n.related)) n.related.forEach((r,j)=>{
+        if(typeof r!=='string') return;
+        if(r===nodeId) fail('self-reference',p+'/related/'+j,'不能关联自身。');
+        else if(!nodes.has(r)) fail('reference',p+'/related/'+j,'关联目标不在本份资料；请合并目标文件，或把待建立联系写入 sections。');
+      });
+    }
+    // Iterative traversal: malformed or deep trees must not overflow the checker stack.
+    const done=new Set();
+    for(const start of nodes.keys()) {
+      let current=start; const chain=[], active=new Set();
+      while(nodes.has(current) && !done.has(current)) {
+        if(active.has(current)) { fail('cycle',paths.get(current)+'/parentId','parentId 形成循环。'); break; }
+        active.add(current); chain.push(current); current=nodes.get(current).parentId;
+      }
+      for(const k of chain) done.add(k);
+    }
+    for(const [nodeId] of nodes) {
+      let current=nodeId, depth=0; const seen=new Set();
+      while(nodes.has(current) && !seen.has(current)) {
+        seen.add(current); current=nodes.get(current).parentId;
+        if(++depth>32) { fail('tree-depth',paths.get(nodeId)+'/parentId','生成规范最多32层；学习内容建议2–4层。'); break; }
+      }
+    }
+    if(!nodes.size) warn('empty-pack','/nodes','空资料可解析，但没有可学习内容；不要称为完成课程整理。');
+    return {ok:errors.length===0,errors,warnings,stats:{chapters:chapters.size,nodes:nodes.size}};
+  }
+
+  // Merge before validating references: cross-file links are valid only in the output.
+  // Repeated chapters/groups are allowed only when their full objects are identical.
+  // Conflicting revisions fail rather than silently taking the last file.
+  function combine(documents) {
+    if(!Array.isArray(documents)||!documents.length) return {ok:false,errors:[{code:'input',path:'',message:'至少提供一个 JSON 文件。'}],warnings:[]};
+    const errors=[], chapters=new Map(), nodes=new Map();
+    function add(map,item,path) {
+      if(!object(item)||typeof item.id!=='string') { errors.push({code:'type',path,message:'合并条目必须是有 id 的对象。'}); return; }
+      if(map.has(item.id)) {
+        if(JSON.stringify(stable(map.get(item.id)))!==JSON.stringify(stable(item))) errors.push({code:'merge-conflict',path,message:'同 ID 出现不同内容：'+item.id+'。请明确保留哪个完整版本。'});
+      } else map.set(item.id,item);
+    }
+    // Validate each document shape too; unknown root fields must not disappear on merge.
+    documents.forEach((doc,i)=>{
+      const result=validate(doc);
+      for(const e of result.errors) if(!['reference','parent'].includes(e.code)) errors.push({...e,path:'/inputs/'+i+e.path});
+      // Only unresolved parents can be satisfied by another file; a wrong-kind or
+      // wrong-chapter parent will be rejected again by the final merged validation.
+      if(Array.isArray(doc?.chapters)) doc.chapters.forEach((c,j)=>add(chapters,c,`/inputs/${i}/chapters/${j}`));
+      if(Array.isArray(doc?.nodes)) doc.nodes.forEach((n,j)=>add(nodes,n,`/inputs/${i}/nodes/${j}`));
+    });
+    if(errors.length) return {ok:false,errors,warnings:[]};
+    const data=documents.length===1 ? documents[0] : {
+      format:'math-review',schemaVersion:2,id:'merged-math-review',title:'多窗口学习资料合并包',
+      coverage:documents.map((d,i)=>`输入 ${i+1}（${d.id||d.title||'未命名'}）：${d.coverage||'未提供范围说明'}`).join('\n'),
+      chapters:[...chapters.values()],nodes:[...nodes.values()]
+    };
+    const result=validate(data);
+    if(byteLength(JSON.stringify(data))>MAX_BYTES) {result.errors.push({code:'size',path:'',message:'合并资料超过30 MiB；按互相关联的章节拆分。'});result.ok=false;}
+    return {...result,data};
+  }
+  const api={MAX_BYTES,parseText,validate,combine};
+  if(typeof module!=='undefined' && module.exports) module.exports=api;
+  else globalThis.MathReviewCheck=api;
+
+  if(typeof require!=='undefined' && typeof module!=='undefined' && require.main===module) {
+    const fs=require('node:fs'),path=require('node:path');
+    const args=process.argv.slice(2), files=[]; let out=null, machine=false;
+    function usage(message) {
+      if(message) console.error(message);
+      console.log('用法: node scripts/validate-math-review.cjs [--json] [--out merged.json] file.json [file2.json ...]\n退出码: 0 通过；1 数据错误；2 参数或读写错误。多文件必须指定 --out；现有输出文件不会被覆盖。');
+      process.exit(message?2:0);
+    }
+    for(let i=0;i<args.length;i++) {
+      if(args[i]==='--help') usage();
+      else if(args[i]==='--json') machine=true;
+      else if(args[i]==='--out') { if(out!==null||!args[i+1]||args[i+1].startsWith('--')) usage('--out 需要一个路径且不可重复。'); out=args[++i]; }
+      else if(args[i].startsWith('--')) usage('未知选项：'+args[i]);
+      else files.push(args[i]);
+    }
+    if(!files.length) usage('请提供输入文件。');
+    if(files.length>1&&!out) usage('多文件检查必须 --out 生成同一份 JSON；直接批量导入不能保证跨文件关联。');
+    if(out && files.some(f=>path.resolve(f)===path.resolve(out))) usage('输出不能覆盖输入。');
+    const docs=[], errors=[];
+    try {
+      if(out && fs.existsSync(out)) usage('输出已存在，请换一个新文件名。');
+      for(const f of files) {
+        if(fs.statSync(f).size>MAX_BYTES) {errors.push({file:f,code:'size',path:'',message:'文件超过30 MiB。'});continue;}
+        const parsed=parseText(fs.readFileSync(f,'utf8'));
+        errors.push(...parsed.errors.map(e=>({...e,file:f})));
+        if(!parsed.errors.length) docs.push(parsed.data);
+      }
+      const result=errors.length?{ok:false,errors,warnings:[]}:combine(docs);
+      if(result.ok && out) {
+        const content=JSON.stringify(result.data,null,2)+'\n';
+        if(byteLength(content)>MAX_BYTES) { result.ok=false;result.errors.push({code:'size',path:'',message:'格式化后的输出超过30 MiB。'}); }
+        else fs.writeFileSync(out,content,{encoding:'utf8',flag:'wx'});
+      }
+      const report={...result};delete report.data;
+      if(machine) console.log(JSON.stringify(report,null,2));
+      else {
+        console.log(result.ok?`PASS ${result.stats.chapters} 章 / ${result.stats.nodes} 节点${out?' → '+out:''}`:'FAIL');
+        for(const e of result.errors) console.error(`ERROR [${e.code}] ${e.file||''}${e.path}: ${e.message}`);
+        for(const w of result.warnings) console.error(`WARN [${w.code}] ${w.path}: ${w.message}`);
+      }
+      process.exitCode=result.ok?0:1;
+    } catch(e) { console.error('IO: '+e.message);process.exitCode=2; }
+  }
+})();
+
+</script><script>
+'use strict';
+const api=globalThis.MathReviewCheck, byId=id=>document.getElementById(id);
+const input=byId('input'),files=byId('files'),button=byId('check'),download=byId('download');
+let output=null, revision=0;
+function reset(){revision++;output=null;download.disabled=true;byId('status').textContent='等待重新检查';byId('report').textContent='输入已变更，旧结果已失效。';}
+input.addEventListener('input',()=>{files.value='';byId('selection').textContent='使用粘贴内容。';reset();});
+files.addEventListener('change',()=>{input.value='';byId('selection').textContent=files.files.length+' 个文件已选择。';reset();});
+button.addEventListener('click',async()=>{
+  reset();const stamp=revision;button.disabled=true;
+  try{
+    const values=[],errors=[];
+    if(files.files.length){for(const file of files.files){
+      if(file.size>api.MAX_BYTES){errors.push({code:'size',path:file.name,message:'文件超过30 MiB。'});continue;}
+      const result=api.parseText(await file.text());
+      errors.push(...result.errors.map(e=>({...e,path:file.name+e.path})));
+      if(!result.errors.length)values.push(result.data);
+    }}else{const result=api.parseText(input.value);errors.push(...result.errors);if(!result.errors.length)values.push(result.data);}
+    if(stamp!==revision)return;
+    const result=errors.length?{ok:false,errors,warnings:[]}:api.combine(values);
+    if(result.ok){output=JSON.stringify(result.data,null,2)+'\n';if(new TextEncoder().encode(output).length>api.MAX_BYTES){result.ok=false;output=null;result.errors.push({code:'size',path:'',message:'格式化后的输出超过30 MiB。'});}}
+    byId('status').textContent=result.ok?'通过：'+result.stats.chapters+' 章 / '+result.stats.nodes+' 节点':'未通过';
+    byId('report').textContent=[...result.errors.map(e=>'ERROR ['+e.code+'] '+e.path+': '+e.message),...result.warnings.map(e=>'WARN ['+e.code+'] '+e.path+': '+e.message)].join('\n')||(result.ok?'可下载同一份 JSON，再导入复习台或数学学习桥。':'未生成导入文件。');
+    download.disabled=!result.ok;
+  }catch(e){if(stamp===revision){byId('status').textContent='读取失败';byId('report').textContent=e.message;output=null;download.disabled=true;}}
+  finally{button.disabled=false;}
+});
+download.addEventListener('click',()=>{if(!output)return;const url=URL.createObjectURL(new Blob([output],{type:'application/json;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='checked.math-review.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);});
+</script></html>

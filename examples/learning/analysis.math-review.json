@@ -1,0 +1,356 @@
+{
+  "format": "math-review",
+  "schemaVersion": 2,
+  "id": "ma-learning-example",
+  "title": "数学分析 · 递推极限与误差级数（原创教学示例）",
+  "coverage": "完整演示定义、推导、数学思想、母题、变式、自测、模拟疑难及跨章节关联；不是全书资料，未引用教材题号或用户作答。",
+  "chapters": [
+    {
+      "id": "ma-sequences",
+      "subjectId": "analysis",
+      "title": "数列极限",
+      "description": "原创示例；章节主题并非教材编号。"
+    },
+    {
+      "id": "ma-series",
+      "subjectId": "analysis",
+      "title": "数项级数",
+      "description": "从递推误差迁移到正项级数比较。"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "ma-sequences-concepts",
+      "chapterId": "ma-sequences",
+      "parentId": null,
+      "kind": "group",
+      "title": "定义与定理",
+      "sections": [],
+      "related": [],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "ma-sequences-limit",
+      "chapterId": "ma-sequences",
+      "parentId": "ma-sequences-concepts",
+      "kind": "knowledge",
+      "title": "数列极限：把任意精度变成尾部控制",
+      "sections": [
+        {
+          "title": "基础定义",
+          "body": "数列 $(a_n)$ 收敛到 $L$，是指对每个 $\\varepsilon>0$，存在正整数 $N$，使所有 $n\\ge N$ 都有 $|a_n-L|<\\varepsilon$。量词顺序不能交换；$N$ 可以依赖精度，不可再依赖所考察的 $n$。"
+        },
+        {
+          "title": "意图与旧工具不足",
+          "body": "画图或计算前几项只能观察有限样本，不能控制整个无穷尾部。定义把“越来越靠近”转换为可以证明的误差控制。"
+        },
+        {
+          "title": "直接检验",
+          "body": "对 $a_n=1/n$，给定 $\\varepsilon>0$，取整数 $N>1/\\varepsilon$ 即可。"
+        }
+      ],
+      "related": [],
+      "tags": [
+        "基础定义"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "否定“$a_n\\to L$”时，应如何写量词？",
+        "answer": "存在 $\\varepsilon_0>0$，对每个正整数 $N$，都存在 $n\\ge N$，使 $|a_n-L|\\ge\\varepsilon_0$。"
+      }
+    },
+    {
+      "id": "ma-sequences-monotone",
+      "chapterId": "ma-sequences",
+      "parentId": "ma-sequences-concepts",
+      "kind": "knowledge",
+      "title": "单调有界定理：先得到存在，再计算极限",
+      "sections": [
+        {
+          "title": "定理及条件",
+          "body": "实数数列单调递增且有上界，则收敛；单调递减且有下界也成立。只有有界或只有单调均不够。"
+        },
+        {
+          "title": "从完备性推导",
+          "body": "递增情形令 $L=\\sup\\{a_n:n\\ge1\\}$。给定 $\\varepsilon>0$，$L-\\varepsilon$ 不是上界，故有 $N$ 满足 $L-\\varepsilon<a_N\\le L$。对 $n\\ge N$，单调性给出 $L-\\varepsilon<a_N\\le a_n\\le L$，于是 $|a_n-L|<\\varepsilon$。"
+        },
+        {
+          "title": "为什么要这个定理",
+          "body": "递推式常常不能直接解出通项。单调性与边界把“未知通项”变成“极限必然存在”，再用连续性把递推关系传到极限。"
+        },
+        {
+          "title": "边界与反例",
+          "body": "$a_n=(-1)^n$ 有界但不收敛；$a_n=n$ 单调但无上界。实数完备性是上述上确界论证的关键。"
+        }
+      ],
+      "related": [
+        "ma-sequences-limit"
+      ],
+      "tags": [
+        "定理",
+        "完备性",
+        "推导"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "ma-sequences-practice",
+      "chapterId": "ma-sequences",
+      "parentId": null,
+      "kind": "group",
+      "title": "数学思想、母题与变式",
+      "sections": [],
+      "related": [],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "ma-sequences-method",
+      "chapterId": "ma-sequences",
+      "parentId": "ma-sequences-practice",
+      "kind": "knowledge",
+      "title": "递推极限的路线：不变区间 → 单调 → 存在 → 方程",
+      "sections": [
+        {
+          "title": "触发结构",
+          "body": "看到 $a_{n+1}=f(a_n)$，先问初值在哪个区间，$f$ 是否把这个区间映回自身。求出不动点只能得到候选值。"
+        },
+        {
+          "title": "关键动作",
+          "body": "先用归纳法给出不变区间；在该区间研究差或比确定单调性；用单调有界定理证明收敛；最后在连续性条件下取极限。"
+        },
+        {
+          "title": "迁移边界",
+          "body": "若 $a_{n+1}=-a_n$ 且 $a_1=1$，不动点方程只有0，但数列振荡不收敛。工具顺序不可颠倒。"
+        }
+      ],
+      "related": [
+        "ma-sequences-monotone",
+        "ma-sequences-mother"
+      ],
+      "tags": [
+        "数学思想",
+        "不变区间"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "ma-sequences-mother",
+      "chapterId": "ma-sequences",
+      "parentId": "ma-sequences-practice",
+      "kind": "knowledge",
+      "title": "补充例：平方根递推的完整母题",
+      "sections": [
+        {
+          "title": "题目（原创补充例）",
+          "body": "$a_1=1$，$a_{n+1}=\\sqrt{2+a_n}$。证明收敛并求极限。"
+        },
+        {
+          "title": "识别与工具选择",
+          "body": "映射 $f(x)=\\sqrt{2+x}$ 连续且递增。不动点候选为2；先证明轨道始终留在 $[1,2)$。"
+        },
+        {
+          "title": "完整解答",
+          "body": "初值在 $[1,2)$。若 $1\\le a_n<2$，则 $1<\\sqrt{2+a_n}<2$。又因 $2+a_n-a_n^2=(2-a_n)(a_n+1)>0$，且两边非负，得 $a_{n+1}>a_n$。于是数列递增有上界，设极限为 $L\\in[1,2]$。连续性给 $L=\\sqrt{2+L}$，即 $(L-2)(L+1)=0$；结合 $L\\ge1$，得 $L=2$。"
+        },
+        {
+          "title": "题目意图与易错",
+          "body": "检验能否把不变区间、单调性、实数完备性与连续性串起来。不能从方程有根直接断言数列收敛；平方后也要筛除不符合原式的根。"
+        }
+      ],
+      "related": [
+        "ma-sequences-method",
+        "ma-sequences-variant",
+        "ma-series-error"
+      ],
+      "tags": [
+        "代表母题",
+        "补充例"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "不看解析，写出取极限之前必须完成的两项证明。",
+        "answer": "证明整个数列有界，并证明单调；据此确认极限存在。再检查递推函数在相关区间连续。"
+      }
+    },
+    {
+      "id": "ma-sequences-variant",
+      "chapterId": "ma-sequences",
+      "parentId": "ma-sequences-practice",
+      "kind": "knowledge",
+      "title": "变式：初值换成3，哪些步骤发生变化",
+      "sections": [
+        {
+          "title": "变式题（原创）",
+          "body": "保持 $a_{n+1}=\\sqrt{2+a_n}$，改为 $a_1=3$。"
+        },
+        {
+          "title": "改变的条件与不变的结构",
+          "body": "不变区间改为 $[2,3]$，单调方向反转，候选极限不变。"
+        },
+        {
+          "title": "解答",
+          "body": "若 $2<a_n\\le3$，则 $2<a_{n+1}\\le\\sqrt5<3$。因为 $(2-a_n)(a_n+1)<0$，有 $a_{n+1}<a_n$。数列递减且下界为2，故收敛；连续性仍给出 $L=2$。"
+        },
+        {
+          "title": "旁枝与反例",
+          "body": "若改为 $a_{n+1}=-a_n$、$a_1=1$，虽有不动点0，却不收敛。变式训练应识别失效条件，而非只更换数字。"
+        }
+      ],
+      "related": [
+        "ma-sequences-mother"
+      ],
+      "tags": [
+        "变式",
+        "条件辨识"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "ma-sequences-binomial",
+      "chapterId": "ma-sequences",
+      "parentId": "ma-sequences-practice",
+      "kind": "knowledge",
+      "title": "补充辨析：为什么 (1+1/n) 的 n+1 次方递减",
+      "sections": [
+        {
+          "title": "说明",
+          "body": "这是一条使用一元微分工具的补充路线，不能当成尚未学习微分时的前置证明。"
+        },
+        {
+          "title": "推导",
+          "body": "令 $F(x)=(x+1)\\log(1+1/x)$，$x>0$。则 $F'(x)=\\log(1+1/x)-1/x<0$。最后一个不等式来自 $\\log(1+t)=\\int_0^t(1+s)^{-1}\\,ds<t$（$t>0$）。因此 $F(n)$ 严格递减，指数函数严格递增，故 $(1+1/n)^{n+1}=\\exp F(n)$ 严格递减。"
+        },
+        {
+          "title": "未来用途",
+          "body": "把离散数列延拓到实变量函数，用导数判断单调性。这里的相关微分与积分节点尚未收录，不建立虚假的 related ID。"
+        }
+      ],
+      "related": [
+        "ma-sequences-monotone"
+      ],
+      "tags": [
+        "补充例",
+        "离散到连续"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "ma-sequences-feedback",
+      "chapterId": "ma-sequences",
+      "parentId": "ma-sequences-practice",
+      "kind": "question",
+      "title": "模拟疑难：解出不动点，是否已经证明收敛",
+      "sections": [
+        {
+          "title": "模拟记录",
+          "body": "以下是为演示字段而编写的教学情境，不是用户真实提问或作答。"
+        },
+        {
+          "title": "关键解释",
+          "body": "不动点方程描述“如果收敛，极限可能是什么”。振荡递推可以有不动点而轨道不收敛。"
+        },
+        {
+          "title": "下一次检验",
+          "body": "独立重做初值为3的变式，先写区间和单调性，不先看解答。未提供作答，不能判定掌握。"
+        }
+      ],
+      "related": [
+        "ma-sequences-mother",
+        "ma-sequences-variant"
+      ],
+      "question": "【教学模拟】我算得 L=2，为什么还要证明单调有界？",
+      "evidence": "【教学模拟】假设一份练习解答只写了不动点方程；没有使用任何真实用户作答。",
+      "historicalDiagnosis": {
+        "evidence": "教学模拟：只列不动点方程。",
+        "bottleneck": "模拟错因：把必要条件当充分条件。",
+        "nextCheck": "待作答：完整证明初值为3的递推收敛。"
+      },
+      "tags": [
+        "模拟疑难",
+        "未检验"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "写一个有不动点但从某个初值出发不收敛的递推。",
+        "answer": "$a_{n+1}=-a_n$ 有不动点0，但从 $a_1=1$ 出发在1与−1间振荡。"
+      }
+    },
+    {
+      "id": "ma-series-group",
+      "chapterId": "ma-series",
+      "parentId": null,
+      "kind": "group",
+      "title": "误差估计与级数联系",
+      "sections": [],
+      "related": [],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      }
+    },
+    {
+      "id": "ma-series-error",
+      "chapterId": "ma-series",
+      "parentId": "ma-series-group",
+      "kind": "knowledge",
+      "title": "从递推极限迁移到误差级数",
+      "sections": [
+        {
+          "title": "基础定义",
+          "body": "数项级数 $\\sum_{n=1}^{\\infty}b_n$ 收敛，是指部分和数列 $S_N=\\sum_{n=1}^N b_n$ 有有限极限。"
+        },
+        {
+          "title": "延伸推导",
+          "body": "对初值1的母题，记 $e_n=2-a_n>0$。由有理化，$e_{n+1}=(2-a_n)/(2+\\sqrt{2+a_n})\\le e_n/3$，故 $0<e_n\\le3^{-(n-1)}$。因此误差级数的部分和递增，且被几何级数和 $3/2$ 控制，故 $\\sum e_n$ 收敛。"
+        },
+        {
+          "title": "数学思想与用途",
+          "body": "把“趋近极限”加强成“误差衰减速度”，再用比较和单调有界判断总误差可控。这里给出的是上界，并非精确误差。"
+        }
+      ],
+      "related": [
+        "ma-sequences-mother",
+        "ma-sequences-monotone"
+      ],
+      "tags": [
+        "跨章节迁移",
+        "误差界"
+      ],
+      "source": {
+        "label": "本次原创教学示例；非教材原题、非用户学习记录",
+        "references": []
+      },
+      "selfCheck": {
+        "prompt": "若只知道 $e_n\\to0$，能否保证 $\\sum e_n$ 收敛？",
+        "answer": "不能。$e_n=1/n\\to0$，但调和级数发散。例如按2的幂分组，每组和至少为1/2。"
+      }
+    }
+  ]
+}
